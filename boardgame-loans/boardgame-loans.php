@@ -2,17 +2,17 @@
 /**
  * Plugin Name:       WP BoardGame Loans
  * Plugin URI:        https://github.com/Tacchan25/boardgame-loans
- * Description:       Gestione prestiti di giochi da tavolo per associazioni.
- * Version:           0.1.0
- * Author:            Tacchan25
+ * Description:       A lightweight solution to manage board game loans, rentals, and waitlists.
+ * Version:           1.0.0
+ * Author:            Andrea "Tacchan" Sartori
  * Author URI:        https://github.com/Tacchan25
  * License:           GPLv2 or later
  * License URI:       https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain:       WP-boardgame-loans
+ * Text Domain:       boardgame-loans
  * Domain Path:       /languages
  */
 
-if ( ! defined( 'ABSPATH' ) ) {
+if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
 }
 
@@ -26,18 +26,21 @@ if ( ! defined( 'ABSPATH' ) ) {
  * - Nuova funzionalità per segnare un prestito come restituito (compilando `return_date` e chiudendo lo `status` a 'closed').
  */
 
-class BoardGame_Loans {
+class BoardGame_Loans
+{
 
     private static $instance = null;
 
-    public static function get_instance() {
-        if ( null === self::$instance ) {
+    public static function get_instance()
+    {
+        if (null === self::$instance) {
             self::$instance = new self();
         }
         return self::$instance;
     }
 
-    private function __construct() {
+    private function __construct()
+    {
         // DB upgrade routine
         if (get_option('bg_loans_db_version') !== '1.1') {
             $this->activate();
@@ -53,11 +56,11 @@ class BoardGame_Loans {
         }
 
         $this->load_dependencies();
-        
-        register_activation_hook( __FILE__, array( $this, 'activate' ) );
+
+        register_activation_hook(__FILE__, array($this, 'activate'));
         add_action('plugins_loaded', array($this, 'load_textdomain'));
-        
-        if ( is_admin() ) {
+
+        if (is_admin()) {
             $admin = new BoardGame_Loans_Admin();
             $admin->init();
         }
@@ -66,16 +69,19 @@ class BoardGame_Loans {
         $public->init();
     }
 
-    public function load_textdomain() {
+    public function load_textdomain()
+    {
         load_plugin_textdomain('boardgame-loans', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
 
-    private function load_dependencies() {
-        require_once plugin_dir_path( __FILE__ ) . 'admin/class-boardgame-loans-admin.php';
-        require_once plugin_dir_path( __FILE__ ) . 'public/class-boardgame-loans-public.php';
+    private function load_dependencies()
+    {
+        require_once plugin_dir_path(__FILE__) . 'admin/class-boardgame-loans-admin.php';
+        require_once plugin_dir_path(__FILE__) . 'public/class-boardgame-loans-public.php';
     }
 
-    public function activate() {
+    public function activate()
+    {
         global $wpdb;
         $table_name = $wpdb->prefix . 'bg_loans';
         $charset_collate = $wpdb->get_charset_collate();
@@ -100,12 +106,13 @@ class BoardGame_Loans {
             KEY game_source_ref (game_source, game_ref)
         ) $charset_collate;";
 
-        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
-        dbDelta( $sql );
+        require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+        dbDelta($sql);
     }
 }
 
-function run_boardgame_loans() {
+function run_boardgame_loans()
+{
     BoardGame_Loans::get_instance();
 }
 
