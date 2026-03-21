@@ -8,7 +8,7 @@ if (!defined('ABSPATH')) {
 global $wpdb;
 $table_name = $wpdb->prefix . 'bg_loans';
 
-$form_mode = get_option('bg_loans_form_mode', 'advanced');
+$form_mode = get_option('bg_loans_form_mode', 'simple');
 
 $is_edit = false;
 $is_copy = false;
@@ -84,7 +84,7 @@ if ($is_copy) {
                         <input name="game_title" type="text" id="game_title" value="<?php echo esc_attr($loan ? $loan->game_title : ''); ?>" class="regular-text" required>
                     </td>
                 </tr>
-                <?php $enable_waitlist = get_option('bg_loans_enable_waitlist', 'true'); ?>
+                <?php $enable_waitlist = get_option('bg_loans_enable_waitlist', 'false'); ?>
                 <tr>
                     <th scope="row"><label for="loan_status"><?php esc_html_e('Status', 'boardgame-loans'); ?></label></th>
                     <td>

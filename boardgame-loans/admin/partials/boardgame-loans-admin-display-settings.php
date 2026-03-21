@@ -11,42 +11,97 @@ if (isset($_POST['action']) && $_POST['action'] === 'save_bg_loans_settings') {
     update_option('bg_loans_default_orderby', sanitize_text_field($_POST['default_orderby']));
     update_option('bg_loans_default_order', sanitize_text_field($_POST['default_order']));
     update_option('bg_loans_date_format', sanitize_text_field($_POST['date_format']));
-    update_option('bg_loans_tablepress_id', sanitize_text_field($_POST['tablepress_id']));
-    update_option('bg_loans_tablepress_col', sanitize_text_field($_POST['tablepress_col']));
-    update_option('bg_loans_extend_days', intval($_POST['extend_days']));
-    update_option('bg_loans_enable_copy_number', sanitize_text_field($_POST['enable_copy_number']));
-    update_option('bg_loans_enable_waitlist', sanitize_text_field($_POST['enable_waitlist']));
-    update_option('bg_loans_waitlist_unique', sanitize_text_field($_POST['waitlist_unique']));
+    // these are disabled but might still be submitted if someone removes disabled, so keep saving logic
+    if (isset($_POST['tablepress_id'])) {
+        update_option('bg_loans_tablepress_id', sanitize_text_field($_POST['tablepress_id']));
+    }
+    if (isset($_POST['tablepress_col'])) {
+        update_option('bg_loans_tablepress_col', sanitize_text_field($_POST['tablepress_col']));
+    }
+    
+    if (isset($_POST['default_duration'])) {
+        update_option('bg_loans_default_duration', intval($_POST['default_duration']));
+    }
+    if (isset($_POST['extend_days'])) {
+        update_option('bg_loans_extend_days', intval($_POST['extend_days']));
+    }
+    if (isset($_POST['enable_copy_number'])) {
+        update_option('bg_loans_enable_copy_number', sanitize_text_field($_POST['enable_copy_number']));
+    }
+    if (isset($_POST['enable_waitlist'])) {
+        update_option('bg_loans_enable_waitlist', sanitize_text_field($_POST['enable_waitlist']));
+    }
+    if (isset($_POST['waitlist_unique'])) {
+        update_option('bg_loans_waitlist_unique', sanitize_text_field($_POST['waitlist_unique']));
+    }
     echo '<div class="notice notice-success is-dismissible"><p>' . esc_html__('Settings saved successfully.', 'boardgame-loans') . '</p></div>';
 }
 
-$form_mode = get_option('bg_loans_form_mode', 'advanced');
+$form_mode = get_option('bg_loans_form_mode', 'simple');
 $default_orderby = get_option('bg_loans_default_orderby', 'status');
 $default_order = get_option('bg_loans_default_order', 'DESC');
 $date_format = get_option('bg_loans_date_format', 'eu');
 $tablepress_id = get_option('bg_loans_tablepress_id', '');
 $tablepress_col = get_option('bg_loans_tablepress_col', 'Nome gioco');
+$default_duration = get_option('bg_loans_default_duration', 7);
 $extend_days = get_option('bg_loans_extend_days', 7);
 $enable_copy_number = get_option('bg_loans_enable_copy_number', 'false');
-$enable_waitlist = get_option('bg_loans_enable_waitlist', 'true');
+$enable_waitlist = get_option('bg_loans_enable_waitlist', 'false');
 $waitlist_unique = get_option('bg_loans_waitlist_unique', 'title_copy');
+
 ?>
 <div class="wrap">
     <h1><?php esc_html_e('Settings', 'boardgame-loans'); ?></h1>
-    <form method="post" action="">
+    
+    <h2 class="nav-tab-wrapper" id="bg-loans-settings-tabs">
+        <a href="#general" class="nav-tab nav-tab-active" data-tab="general"><?php esc_html_e('General', 'boardgame-loans'); ?></a>
+        <a href="#loans" class="nav-tab" data-tab="loans"><?php esc_html_e('Loans & Options', 'boardgame-loans'); ?></a>
+        <a href="#waitlist" class="nav-tab" data-tab="waitlist"><?php esc_html_e('Waitlist', 'boardgame-loans'); ?></a>
+    </h2>
+
+    <form method="post" action="?page=boardgame-loans-settings">
         <?php wp_nonce_field('bg_loans_save_settings'); ?>
         <input type="hidden" name="action" value="save_bg_loans_settings">
         
+        <div id="tab-general" class="bg-loans-tab-content">
         <table class="form-table">
             <tr>
                 <th scope="row"><?php esc_html_e('Loan Form Mode', 'boardgame-loans'); ?></th>
                 <td>
                     <select name="form_mode">
                         <option value="simple" <?php selected($form_mode, 'simple'); ?>><?php esc_html_e('Simple Mode (Title, Code, Name, Dates, Notes)', 'boardgame-loans'); ?></option>
-                        <option value="advanced" <?php selected($form_mode, 'advanced'); ?>><?php esc_html_e('Advanced Mode (BGG/TablePress reference, User linkage, etc)', 'boardgame-loans'); ?></option>
+                        <option value="advanced" <?php selected($form_mode, 'advanced'); ?>><?php esc_html_e('Advanced Mode (Beta - TODO)', 'boardgame-loans'); ?></option><?php // Advanced Mode (BGG/TablePress reference, User linkage, etc)  ?> 
                     </select>
                 </td>
             </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('Date display format', 'boardgame-loans'); ?></th>
+                <td>
+                    <select name="date_format">
+                        <option value="eu" <?php selected($date_format, 'eu'); ?>><?php esc_html_e('European (dd/mm/yyyy)', 'boardgame-loans'); ?></option>
+                        <option value="us" <?php selected($date_format, 'us'); ?>><?php esc_html_e('USA (yyyy-mm-dd)', 'boardgame-loans'); ?></option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('TablePress Table ID', 'boardgame-loans'); ?></th>
+                <td>
+                    <input disabled type="text" name="tablepress_id" value="<?php echo esc_attr($tablepress_id); ?>" class="regular-text">
+                    <p class="description"><?php esc_html_e('ID of the TablePress table holding games (e.g. 2). (TO DO)', 'boardgame-loans'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('TablePress Game Title Column', 'boardgame-loans'); ?></th>
+                <td>
+                    <input disabled type="text" name="tablepress_col" value="<?php echo esc_attr($tablepress_col); ?>" class="regular-text">
+                    <p class="description"><?php esc_html_e('Exact Name of the column containing the boardgame title. (TO DO)', 'boardgame-loans'); ?></p>
+                </td>
+            </tr>
+        </table>
+        </div>
+        
+        <div id="tab-loans" class="bg-loans-tab-content" style="display:none;">
+        <table class="form-table">
             <tr>
                 <th scope="row"><?php esc_html_e('List Default Order By', 'boardgame-loans'); ?></th>
                 <td>
@@ -68,26 +123,10 @@ $waitlist_unique = get_option('bg_loans_waitlist_unique', 'title_copy');
                 </td>
             </tr>
             <tr>
-                <th scope="row"><?php esc_html_e('Date display format', 'boardgame-loans'); ?></th>
+                <th scope="row"><?php esc_html_e('Default Loan Duration (Days)', 'boardgame-loans'); ?></th>
                 <td>
-                    <select name="date_format">
-                        <option value="eu" <?php selected($date_format, 'eu'); ?>><?php esc_html_e('European (dd/mm/yyyy)', 'boardgame-loans'); ?></option>
-                        <option value="us" <?php selected($date_format, 'us'); ?>><?php esc_html_e('USA (yyyy-mm-dd)', 'boardgame-loans'); ?></option>
-                    </select>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('TablePress Table ID', 'boardgame-loans'); ?></th>
-                <td>
-                    <input type="text" name="tablepress_id" value="<?php echo esc_attr($tablepress_id); ?>" class="regular-text">
-                    <p class="description"><?php esc_html_e('ID of the TablePress table holding games (e.g. 2).', 'boardgame-loans'); ?></p>
-                </td>
-            </tr>
-            <tr>
-                <th scope="row"><?php esc_html_e('TablePress Game Title Column', 'boardgame-loans'); ?></th>
-                <td>
-                    <input type="text" name="tablepress_col" value="<?php echo esc_attr($tablepress_col); ?>" class="regular-text">
-                    <p class="description"><?php esc_html_e('Exact Name of the column containing the boardgame title.', 'boardgame-loans'); ?></p>
+                    <input type="number" name="default_duration" value="<?php echo esc_attr($default_duration); ?>" class="small-text" min="1">
+                    <p class="description"><?php esc_html_e('Number of days a loan defaults to when created or issued from waitlist.', 'boardgame-loans'); ?></p>
                 </td>
             </tr>
             <tr>
@@ -107,6 +146,11 @@ $waitlist_unique = get_option('bg_loans_waitlist_unique', 'title_copy');
                     <p class="description"><?php esc_html_e('Useful for tracking multiple identical copies of the same game.', 'boardgame-loans'); ?></p>
                 </td>
             </tr>
+        </table>
+        </div>
+        
+        <div id="tab-waitlist" class="bg-loans-tab-content" style="display:none;">
+        <table class="form-table">
             <tr>
                 <th scope="row"><?php esc_html_e('Enable Waitlist Logic', 'boardgame-loans'); ?></th>
                 <td>
@@ -128,6 +172,36 @@ $waitlist_unique = get_option('bg_loans_waitlist_unique', 'title_copy');
                 </td>
             </tr>
         </table>
+        </div>
+        
         <?php submit_button(__('Save Settings', 'boardgame-loans')); ?>
     </form>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var tabs = document.querySelectorAll('#bg-loans-settings-tabs .nav-tab');
+    var contents = document.querySelectorAll('.bg-loans-tab-content');
+
+    tabs.forEach(function(tab) {
+        tab.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            // Remove active class from all tabs
+            tabs.forEach(function(t) { t.classList.remove('nav-tab-active'); });
+            
+            // Add active class to clicked tab
+            tab.classList.add('nav-tab-active');
+            
+            // Hide all tab contents
+            contents.forEach(function(c) { c.style.display = 'none'; });
+            
+            // Show the corresponding tab content
+            var targetId = 'tab-' + tab.getAttribute('data-tab');
+            var targetEl = document.getElementById(targetId);
+            if(targetEl) {
+                targetEl.style.display = 'block';
+            }
+        });
+    });
+});
+</script>

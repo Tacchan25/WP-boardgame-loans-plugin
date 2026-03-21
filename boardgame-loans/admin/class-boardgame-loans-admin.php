@@ -43,7 +43,7 @@ class BoardGame_Loans_Admin
 
             // Waitlist interception logic
             if ($closed_loan) {
-                $enable_waitlist = get_option('bg_loans_enable_waitlist', 'true');
+                $enable_waitlist = get_option('bg_loans_enable_waitlist', 'false');
                 if ($enable_waitlist === 'true') {
                     $waitlist_unique = get_option('bg_loans_waitlist_unique', 'title_copy');
                     if ($waitlist_unique === 'internal_code' && !empty($closed_loan->internal_code)) {
@@ -100,7 +100,7 @@ class BoardGame_Loans_Admin
             check_admin_referer('issue_loan_' . $_GET['loan_id']);
             $loan_id = intval($_GET['loan_id']);
 
-            $loan_duration = intval(get_option('bg_loans_default_duration', 14));
+            $loan_duration = intval(get_option('bg_loans_default_duration', 7));
             $new_due_date = date('Y-m-d H:i:s', strtotime("+$loan_duration days"));
 
             $wpdb->update(
