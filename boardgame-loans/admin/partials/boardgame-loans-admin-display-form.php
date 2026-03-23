@@ -64,14 +64,13 @@ if ($is_copy) {
                     <th scope="row"><label for="game_source"><?php esc_html_e('Source', 'boardgame-loans'); ?></label></th>
                     <td>
                         <select name="game_source" id="game_source" required>
-                            <option value="tablepress" <?php selected($loan ? $loan->game_source : '', 'tablepress'); ?>>TablePress</option>
-                            <option value="bgg" <?php selected($loan ? $loan->game_source : '', 'bgg'); ?>>BGG</option>
-                            <option value="manual" <?php selected($loan ? $loan->game_source : 'manual', 'manual'); ?>>Manual</option>
+                            <option value="tablepress" <?php selected($loan ? $loan->game_source : 'tablepress', 'tablepress'); ?>>TablePress</option>
+                            <option value="manual" <?php selected($loan ? $loan->game_source : '', 'manual'); ?>>Manual</option>
                         </select>
                     </td>
                 </tr>
                 <tr>
-                    <th scope="row"><label for="game_ref"><?php esc_html_e('Reference (BGG/TablePress ID)', 'boardgame-loans'); ?></label></th>
+                    <th scope="row"><label for="game_ref"><?php esc_html_e('Reference (TablePress ID)', 'boardgame-loans'); ?></label></th>
                     <td>
                         <input name="game_ref" type="text" id="game_ref" value="<?php echo esc_attr($loan ? $loan->game_ref : ''); ?>" class="regular-text">
                         <button type="button" class="button" id="btn_search_game"><?php esc_html_e('Search', 'boardgame-loans'); ?></button>
@@ -202,16 +201,99 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btnSearch && titleInput && refInput && sourceSelect) {
         btnSearch.addEventListener('click', function() {
             const source = sourceSelect.value;
-            const refId = refInput.value;
+            const query = refInput.value.trim();
             
-            if (!refId) {
-                alert('<?php esc_attr_e('Please enter a reference ID before searching.', 'boardgame-loans'); ?>');
+            if (!query) {
+                alert('<?php esc_attr_e('Please enter a reference ID or title before searching.', 'boardgame-loans'); ?>');
                 return;
             }
-            
-            // TODO: Implement actual AJAX call to TablePress or BGG
-            titleInput.value = 'Mock title from ' + source + ' (ID: ' + refId + ')';
-            alert('Search on ' + source + ' for ID ' + refId + ' via AJAX to be implemented.');
+
+            if (source !== 'tablepress') {
+                alert('<?php esc_attr_e('Advanced search is only implemented for TablePress.', 'boardgame-loans'); ?>');
+                return;
+            }
+
+            btnSearch.disabled = true;
+            btnSearch.textContent = 'Searching...';
+
+            let oldList = document.getElementById('bg-loans-tp-results');
+            if (oldList) oldList.remove();
+
+            const data = new URLSearchParams({
+                action: 'bg_loans_search_tablepress',
+                q: query
+            });
+
+            fetch(ajaxurl, {
+                method: 'POST',
+                body: data
+            })
+            .then(response => response.json())
+            .then(res => {
+                btnSearch.disabled = false;
+                btnSearch.textContent = '<?php esc_attr_e('Search', 'boardgame-loans'); ?>';
+
+                if (!res.success) {
+                    alert('<?php esc_attr_e('TablePress Search Error:', 'boardgame-loans'); ?> ' + (res.data || '<?php esc_attr_e('Unknown error. Check the network tab.', 'boardgame-loans'); ?>'));
+                    return;
+                }
+
+                if (!res.data || res.data.length === 0) {
+                    alert('<?php esc_attr_e('No results found.', 'boardgame-loans'); ?>');
+                    return;
+                }
+
+                const results = res.data;
+
+                if (results.length === 1) {
+                    refInput.value = results[0].id;
+                    titleInput.value = results[0].title;
+                } else {
+                    const container = document.createElement('div');
+                    container.id = 'bg-loans-tp-results';
+                    container.style.marginTop = '10px';
+                    
+                    const select = document.createElement('select');
+                    select.style.maxWidth = '300px';
+                    
+                    const defaultOpt = document.createElement('option');
+                    defaultOpt.value = '';
+                    defaultOpt.textContent = '<?php esc_attr_e('-- Select a game --', 'boardgame-loans'); ?>';
+                    select.appendChild(defaultOpt);
+
+                    results.forEach(item => {
+                        const opt = document.createElement('option');
+                        opt.value = item.id;
+                        opt.dataset.title = item.title;
+                        const yearStr = item.year ? ` (${item.year})` : '';
+                        opt.textContent = item.title + yearStr;
+                        select.appendChild(opt);
+                    });
+
+                    const applyBtn = document.createElement('button');
+                    applyBtn.type = 'button';
+                    applyBtn.className = 'button';
+                    applyBtn.style.marginLeft = '5px';
+                    applyBtn.textContent = '<?php esc_attr_e('Apply', 'boardgame-loans'); ?>';
+                    
+                    applyBtn.addEventListener('click', function() {
+                        if (select.value) {
+                            refInput.value = select.value;
+                            titleInput.value = select.options[select.selectedIndex].dataset.title;
+                            container.remove();
+                        }
+                    });
+
+                    container.appendChild(select);
+                    container.appendChild(applyBtn);
+                    refInput.parentNode.appendChild(container);
+                }
+            })
+            .catch(err => {
+                btnSearch.disabled = false;
+                btnSearch.textContent = '<?php esc_attr_e('Search', 'boardgame-loans'); ?>';
+                alert('<?php esc_attr_e('Error contacting server.', 'boardgame-loans'); ?>');
+            });
         });
     }
 });

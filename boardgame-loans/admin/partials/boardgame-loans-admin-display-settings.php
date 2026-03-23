@@ -11,12 +11,17 @@ if (isset($_POST['action']) && $_POST['action'] === 'save_bg_loans_settings') {
     update_option('bg_loans_default_orderby', sanitize_text_field($_POST['default_orderby']));
     update_option('bg_loans_default_order', sanitize_text_field($_POST['default_order']));
     update_option('bg_loans_date_format', sanitize_text_field($_POST['date_format']));
-    // these are disabled but might still be submitted if someone removes disabled, so keep saving logic
     if (isset($_POST['tablepress_id'])) {
         update_option('bg_loans_tablepress_id', sanitize_text_field($_POST['tablepress_id']));
     }
     if (isset($_POST['tablepress_col'])) {
         update_option('bg_loans_tablepress_col', sanitize_text_field($_POST['tablepress_col']));
+    }
+    if (isset($_POST['tablepress_col_id'])) {
+        update_option('bg_loans_tablepress_col_id', sanitize_text_field($_POST['tablepress_col_id']));
+    }
+    if (isset($_POST['tablepress_col_year'])) {
+        update_option('bg_loans_tablepress_col_year', sanitize_text_field($_POST['tablepress_col_year']));
     }
     
     if (isset($_POST['default_duration'])) {
@@ -42,7 +47,9 @@ $default_orderby = get_option('bg_loans_default_orderby', 'status');
 $default_order = get_option('bg_loans_default_order', 'DESC');
 $date_format = get_option('bg_loans_date_format', 'eu');
 $tablepress_id = get_option('bg_loans_tablepress_id', '');
-$tablepress_col = get_option('bg_loans_tablepress_col', 'Nome gioco');
+$tablepress_col = get_option('bg_loans_tablepress_col', '');
+$tablepress_col_id = get_option('bg_loans_tablepress_col_id', '');
+$tablepress_col_year = get_option('bg_loans_tablepress_col_year', '');
 $default_duration = get_option('bg_loans_default_duration', 7);
 $extend_days = get_option('bg_loans_extend_days', 7);
 $enable_copy_number = get_option('bg_loans_enable_copy_number', 'false');
@@ -57,6 +64,7 @@ $waitlist_unique = get_option('bg_loans_waitlist_unique', 'title_copy');
         <a href="#general" class="nav-tab nav-tab-active" data-tab="general"><?php esc_html_e('General', 'boardgame-loans'); ?></a>
         <a href="#loans" class="nav-tab" data-tab="loans"><?php esc_html_e('Loans & Options', 'boardgame-loans'); ?></a>
         <a href="#waitlist" class="nav-tab" data-tab="waitlist"><?php esc_html_e('Waitlist', 'boardgame-loans'); ?></a>
+        <a href="#tablepress" class="nav-tab" data-tab="tablepress"><?php esc_html_e('TablePress', 'boardgame-loans'); ?></a>
     </h2>
 
     <form method="post" action="?page=boardgame-loans-settings">
@@ -70,7 +78,7 @@ $waitlist_unique = get_option('bg_loans_waitlist_unique', 'title_copy');
                 <td>
                     <select name="form_mode">
                         <option value="simple" <?php selected($form_mode, 'simple'); ?>><?php esc_html_e('Simple Mode (Title, Code, Name, Dates, Notes)', 'boardgame-loans'); ?></option>
-                        <option value="advanced" <?php selected($form_mode, 'advanced'); ?>><?php esc_html_e('Advanced Mode (Beta - TODO)', 'boardgame-loans'); ?></option><?php // Advanced Mode (BGG/TablePress reference, User linkage, etc)  ?> 
+                        <option value="advanced" <?php selected($form_mode, 'advanced'); ?>><?php esc_html_e('TablePress Mode (Autocomplete game data from TablePress)', 'boardgame-loans'); ?></option>
                     </select>
                 </td>
             </tr>
@@ -83,18 +91,37 @@ $waitlist_unique = get_option('bg_loans_waitlist_unique', 'title_copy');
                     </select>
                 </td>
             </tr>
+        </table>
+        </div>
+        
+        <div id="tab-tablepress" class="bg-loans-tab-content" style="display:none;">
+        <table class="form-table">
             <tr>
                 <th scope="row"><?php esc_html_e('TablePress Table ID', 'boardgame-loans'); ?></th>
                 <td>
-                    <input disabled type="text" name="tablepress_id" value="<?php echo esc_attr($tablepress_id); ?>" class="regular-text">
-                    <p class="description"><?php esc_html_e('ID of the TablePress table holding games (e.g. 2). (TO DO)', 'boardgame-loans'); ?></p>
+                    <input type="text" name="tablepress_id" value="<?php echo esc_attr($tablepress_id); ?>" class="regular-text">
+                    <p class="description"><?php esc_html_e('ID of the TablePress table holding games (e.g. 2).', 'boardgame-loans'); ?></p>
                 </td>
             </tr>
             <tr>
-                <th scope="row"><?php esc_html_e('TablePress Game Title Column', 'boardgame-loans'); ?></th>
+                <th scope="row"><?php esc_html_e('Game Title Column', 'boardgame-loans'); ?></th>
                 <td>
-                    <input disabled type="text" name="tablepress_col" value="<?php echo esc_attr($tablepress_col); ?>" class="regular-text">
-                    <p class="description"><?php esc_html_e('Exact Name of the column containing the boardgame title. (TO DO)', 'boardgame-loans'); ?></p>
+                    <input type="text" name="tablepress_col" value="<?php echo esc_attr($tablepress_col); ?>" class="regular-text">
+                    <p class="description"><?php esc_html_e('Exact Name of the column containing the boardgame title (e.g. "Title").', 'boardgame-loans'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('Game Year Column (Optional)', 'boardgame-loans'); ?></th>
+                <td>
+                    <input type="text" name="tablepress_col_year" value="<?php echo esc_attr($tablepress_col_year); ?>" class="regular-text">
+                    <p class="description"><?php esc_html_e('Exact Name of the column containing the boardgame release year.', 'boardgame-loans'); ?></p>
+                </td>
+            </tr>
+            <tr>
+                <th scope="row"><?php esc_html_e('Game ID/Code Column (Optional)', 'boardgame-loans'); ?></th>
+                <td>
+                    <input type="text" name="tablepress_col_id" value="<?php echo esc_attr($tablepress_col_id); ?>" class="regular-text">
+                    <p class="description"><?php esc_html_e('Exact Name of the column containing the unique ID or Code. If left empty, the row number or first column will be used.', 'boardgame-loans'); ?></p>
                 </td>
             </tr>
         </table>

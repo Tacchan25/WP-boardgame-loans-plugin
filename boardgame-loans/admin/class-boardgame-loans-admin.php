@@ -11,6 +11,8 @@ class BoardGame_Loans_Admin
     {
         add_action('admin_menu', array($this, 'add_plugin_admin_menu'));
         add_action('admin_init', array($this, 'handle_new_loan_submission'));
+        add_action('wp_ajax_bg_loans_change_status', array($this, 'ajax_change_status'));
+        add_action('wp_ajax_bg_loans_search_tablepress', array($this, 'ajax_search_tablepress'));
     }
 
     public function handle_new_loan_submission()
@@ -184,6 +186,93 @@ class BoardGame_Loans_Admin
             wp_safe_redirect($redirect_url);
             exit;
         }
+    }
+    public function ajax_search_tablepress()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(__('Permission denied.', 'boardgame-loans'));
+        }
+
+        $query = isset($_POST['q']) ? sanitize_text_field($_POST['q']) : '';
+        if (empty($query)) {
+            wp_send_json_error(__('Empty query', 'boardgame-loans'));
+        }
+
+        if (!class_exists('TablePress')) {
+            wp_send_json_error(__('TablePress is not active or installed.', 'boardgame-loans'));
+        }
+
+        $table_id = get_option('bg_loans_tablepress_id');
+        if (empty($table_id)) {
+            wp_send_json_error(__('TablePress ID not configured in settings.', 'boardgame-loans'));
+        }
+
+        $model_table = TablePress::load_model('table');
+        $table = $model_table->load($table_id, true, true);
+        
+        if (is_wp_error($table) || empty($table['data'])) {
+            wp_send_json_error(__('Could not load TablePress table. Check the ID in settings.', 'boardgame-loans'));
+        }
+
+        $data = $table['data'];
+        $headers = $data[0]; // first row
+        
+        $col_title_name = get_option('bg_loans_tablepress_col', '');
+        $col_year_name = get_option('bg_loans_tablepress_col_year', '');
+        $col_id_name = get_option('bg_loans_tablepress_col_id', '');
+
+        $col_title_idx = -1;
+        $col_year_idx = -1;
+        $col_id_idx = -1;
+
+        foreach ($headers as $index => $header) {
+            $h = trim($header);
+            if (!empty($col_title_name) && strcasecmp($h, $col_title_name) === 0) $col_title_idx = $index;
+            if (!empty($col_year_name) && strcasecmp($h, $col_year_name) === 0) $col_year_idx = $index;
+            if (!empty($col_id_name) && strcasecmp($h, $col_id_name) === 0) $col_id_idx = $index;
+        }
+
+        if ($col_title_idx === -1) {
+            wp_send_json_error(__('Configured Title column not found in the table headers. Check settings.', 'boardgame-loans'));
+        }
+
+        $results = array();
+        $query_lower = mb_strtolower($query);
+
+        for ($i = 1; $i < count($data); $i++) {
+            $row = $data[$i];
+            
+            if (empty(array_filter($row))) continue;
+
+            $title = isset($row[$col_title_idx]) ? trim($row[$col_title_idx]) : '';
+            if (empty($title)) continue;
+
+            $year = ($col_year_idx !== -1 && isset($row[$col_year_idx])) ? trim($row[$col_year_idx]) : '';
+            $id = ($col_id_idx !== -1 && isset($row[$col_id_idx])) ? trim($row[$col_id_idx]) : trim($row[0]);
+            
+            if (empty($id)) $id = (string)$i;
+
+            $match = false;
+            if ($id === $query) {
+                $match = true;
+            } else if (mb_strpos(mb_strtolower($title), $query_lower) !== false) {
+                $match = true;
+            } else if (mb_strpos(mb_strtolower($id), $query_lower) !== false) {
+                $match = true;
+            }
+
+            if ($match) {
+                $results[] = array(
+                    'id' => $id,
+                    'title' => $title,
+                    'year' => $year
+                );
+            }
+            
+            if (count($results) >= 50) break;
+        }
+
+        wp_send_json_success($results);
     }
 
     public function add_plugin_admin_menu()

@@ -132,7 +132,8 @@ $base_url = admin_url('admin.php?page=boardgame-loans');
         <?php endif; ?>
     <?php endif; ?>
 
-    <table class="wp-list-table widefat fixed striped">
+    <div style="overflow-x: auto; max-width: 100%; border: 1px solid #c3c4c7; margin-top: 10px;">
+        <table class="wp-list-table widefat fixed striped" style="min-width: 1000px; border: none; margin: 0;">
         <thead>
             <tr>
                 <?php
@@ -171,8 +172,8 @@ $base_url = admin_url('admin.php?page=boardgame-loans');
             <?php if ($loans): ?>
                 <?php foreach ($loans as $loan): ?>
                     <tr>
-                        <td><?php echo esc_html($loan->id); ?></td>
-                        <td>
+                        <td data-colname="<?php esc_attr_e('ID', 'boardgame-loans'); ?>"><?php echo esc_html($loan->id); ?></td>
+                        <td data-colname="<?php esc_attr_e('Game', 'boardgame-loans'); ?>">
                             <strong><?php 
                                 echo esc_html($loan->game_title); 
                                 if ($enable_copy_number === 'true' && isset($loan->copy_number) && $loan->copy_number > 1) {
@@ -180,7 +181,7 @@ $base_url = admin_url('admin.php?page=boardgame-loans');
                                 }
                             ?></strong><br>
                         </td>
-                        <td>
+                        <td data-colname="<?php esc_attr_e('Borrower', 'boardgame-loans'); ?>">
                             <?php
                             if ($loan->borrower_type === 'user' && $loan->borrower_user_id) {
                                 $user_info = get_userdata($loan->borrower_user_id);
@@ -190,10 +191,10 @@ $base_url = admin_url('admin.php?page=boardgame-loans');
                             }
                             ?>
                         </td>
-                        <td><?php echo ($loan->status === 'waitlist') ? '-' : esc_html(date_i18n($date_format_str, strtotime($loan->loan_date))); ?></td>
-                        <td><?php echo ($loan->status === 'waitlist' || empty($loan->due_date)) ? '-' : esc_html(date_i18n($date_format_str, strtotime($loan->due_date))); ?></td>
-                        <td><?php echo $loan->return_date ? esc_html(date_i18n($date_format_str, strtotime($loan->return_date))) : '-'; ?></td>
-                        <td style="text-align: center;">
+                        <td data-colname="<?php esc_attr_e('Loan Date', 'boardgame-loans'); ?>"><?php echo ($loan->status === 'waitlist') ? '-' : esc_html(date_i18n($date_format_str, strtotime($loan->loan_date))); ?></td>
+                        <td data-colname="<?php esc_attr_e('Due Date', 'boardgame-loans'); ?>"><?php echo ($loan->status === 'waitlist' || empty($loan->due_date)) ? '-' : esc_html(date_i18n($date_format_str, strtotime($loan->due_date))); ?></td>
+                        <td data-colname="<?php esc_attr_e('Return Date', 'boardgame-loans'); ?>"><?php echo $loan->return_date ? esc_html(date_i18n($date_format_str, strtotime($loan->return_date))) : '-'; ?></td>
+                        <td data-colname="<?php esc_attr_e('Status', 'boardgame-loans'); ?>" style="text-align: center;">
                             <?php if ($loan->status === 'closed'): ?>
                                 <span class="dashicons dashicons-saved" style="color: #46b450;" title="<?php esc_attr_e('Returned', 'boardgame-loans'); ?>"></span>
                             <?php elseif ($loan->status === 'available'): ?>
@@ -206,7 +207,7 @@ $base_url = admin_url('admin.php?page=boardgame-loans');
                                 <span class="dashicons dashicons-update-alt" style="color: #dba617;" title="<?php esc_attr_e('In progress', 'boardgame-loans'); ?>"></span>
                             <?php endif; ?>
                         </td>
-                        <td style="white-space: nowrap;">
+                        <td data-colname="" style="white-space: nowrap;">
                             <a href="<?php echo esc_url(admin_url('admin.php?page=boardgame-loans-new&loan_id=' . $loan->id)); ?>" class="button button-small" title="<?php esc_attr_e('Edit', 'boardgame-loans'); ?>"><span class="dashicons dashicons-edit" style="line-height: 1.5;"></span></a>
                             <a href="<?php echo esc_url(admin_url('admin.php?page=boardgame-loans-new&action=copy_loan&loan_id=' . $loan->id)); ?>" class="button button-small" title="<?php esc_attr_e('Copy', 'boardgame-loans'); ?>"><span class="dashicons dashicons-admin-page" style="line-height: 1.5;"></span></a>
                             <?php if ($loan->status === 'available'): ?>
@@ -222,9 +223,10 @@ $base_url = admin_url('admin.php?page=boardgame-loans');
                 <?php endforeach; ?>
             <?php else: ?>
                 <tr>
-                    <td colspan="7"><?php esc_html_e('No active loans at the moment.', 'boardgame-loans'); ?></td>
+                    <td data-colname="" colspan="7" style="justify-content: center !important;"><?php esc_html_e('No active loans at the moment.', 'boardgame-loans'); ?></td>
                 </tr>
             <?php endif; ?>
         </tbody>
     </table>
+    </div>
 </div>

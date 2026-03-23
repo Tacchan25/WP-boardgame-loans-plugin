@@ -383,3 +383,72 @@ msgstr "Pronto per il Ritiro (Messo da parte)"
 
 msgid "No loans to show at the moment."
 msgstr "Nessun movimento da mostrare al momento."
+
+msgid "Reference (TablePress ID)"
+msgstr "Riferimento (ID TablePress)"
+
+msgid "Game Title Column"
+msgstr "Colonna Titolo Gioco"
+
+msgid "Exact Name of the column containing the boardgame title (e.g. \"Title\")."
+msgstr "Nome esatto della colonna contenente il titolo del gioco (es. \"Titolo\")."
+
+msgid "Game Year Column (Optional)"
+msgstr "Colonna Anno Gioco (Opzionale)"
+
+msgid "Exact Name of the column containing the boardgame release year."
+msgstr "Nome esatto della colonna contenente l'anno di uscita del gioco."
+
+msgid "Game ID/Code Column (Optional)"
+msgstr "Colonna ID/Codice Gioco (Opzionale)"
+
+msgid "Exact Name of the column containing the unique ID or Code. If left empty, the row number or first column will be used."
+msgstr "Nome esatto della colonna contenente il codice o l'ID univoco. Se vuoto, verrà usata la prima colonna o il numero di riga."
+
+msgid "ID of the TablePress table holding games (e.g. 2)."
+msgstr "L'ID della tabella di TablePress contenente l'elenco dei giochi (es. 2)."
+
+msgid "TablePress is not active or installed."
+msgstr "TablePress non è attivo o installato nel sito."
+
+msgid "TablePress ID not configured in settings."
+msgstr "ID TablePress non configurato nelle impostazioni."
+
+msgid "Could not load TablePress table. Check the ID in settings."
+msgstr "Impossibile caricare la tabella TablePress. Controlla l'ID nelle impostazioni."
+
+msgid "Configured Title column not found in the table headers. Check settings."
+msgstr "La colonna Titolo configurata non è stata trovata nell'intestazione della tabella."
+
+msgid "Advanced search is only implemented for TablePress."
+msgstr "La ricerca avanzata è implementata solo per TablePress."
+
+msgid "TablePress Search Error:"
+msgstr "Errore Ricerca TablePress:"
+
+msgid "Unknown error. Check the network tab."
+msgstr "Errore sconosciuto. Controlla la console di rete."
+
+msgid "Error contacting server."
+msgstr "Errore di connessione al server."
+
+msgid "TablePress"
+msgstr "TablePress"
+
+msgid "Empty query"
+msgstr "Query di ricerca vuota."
+
+msgid "General"
+msgstr "Generale"
+
+msgid "Loans & Options"
+msgstr "Prestiti e Opzioni"
+
+msgid "Default Loan Duration (Days)"
+msgstr "Durata di Default del Prestito (Giorni)"
+
+msgid "Number of days a loan defaults to when created or issued from waitlist."
+msgstr "Numero di giorni predefiniti assegnati a un nuovo prestito, o attivato dalla lista di attesa."
+
+msgid "TablePress Mode (Autocomplete game data from TablePress)"
+msgstr "Modalità TablePress (Compila automaticamente dal database TablePress)"
