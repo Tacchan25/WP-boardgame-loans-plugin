@@ -11,7 +11,6 @@ class BoardGame_Loans_Admin
     {
         add_action('admin_menu', array($this, 'add_plugin_admin_menu'));
         add_action('admin_init', array($this, 'handle_new_loan_submission'));
-        add_action('wp_ajax_bg_loans_change_status', array($this, 'ajax_change_status'));
         add_action('wp_ajax_bg_loans_search_tablepress', array($this, 'ajax_search_tablepress'));
 
         // Enqueue Assets
@@ -34,6 +33,7 @@ class BoardGame_Loans_Admin
         // Pass translations and ajaxurl
         wp_localize_script('boardgame-loans-admin', 'bgLoansAdmin', array(
             'ajaxurl' => admin_url('admin-ajax.php'),
+            'searchNonce' => wp_create_nonce('bg_loans_admin_nonce'),
             'i18n' => array(
                 'enterQuery' => __('Please enter a reference ID or title before searching.', 'boardgame-loans'),
                 'onlyTablePress' => __('Advanced search is only implemented for TablePress.', 'boardgame-loans'),
@@ -56,6 +56,10 @@ class BoardGame_Loans_Admin
 
     public function handle_new_loan_submission()
     {
+        if (!current_user_can('manage_options')) {
+            return;
+        }
+
         global $wpdb;
         $table_name = $wpdb->prefix . 'bg_loans';
 
@@ -227,6 +231,8 @@ class BoardGame_Loans_Admin
     }
     public function ajax_search_tablepress()
     {
+        check_ajax_referer('bg_loans_admin_nonce', 'nonce');
+
         if (!current_user_can('manage_options')) {
             wp_send_json_error(__('Permission denied.', 'boardgame-loans'));
         }

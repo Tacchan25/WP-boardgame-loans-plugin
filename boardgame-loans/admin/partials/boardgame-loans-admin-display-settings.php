@@ -6,6 +6,9 @@ if (!defined('ABSPATH')) {
 }
 
 if (isset($_POST['action']) && $_POST['action'] === 'save_bg_loans_settings') {
+    if (!current_user_can('manage_options')) {
+        wp_die(esc_html__('Permission denied.', 'boardgame-loans'));
+    }
     check_admin_referer('bg_loans_save_settings');
     update_option('bg_loans_form_mode', sanitize_text_field($_POST['form_mode']));
     update_option('bg_loans_default_orderby', sanitize_text_field($_POST['default_orderby']));

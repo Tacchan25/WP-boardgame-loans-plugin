@@ -45,7 +45,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const data = new URLSearchParams({
                 action: 'bg_loans_search_tablepress',
-                q: query
+                q: query,
+                nonce: bgLoansAdmin.searchNonce
             });
 
             fetch(bgLoansAdmin.ajaxurl, {
