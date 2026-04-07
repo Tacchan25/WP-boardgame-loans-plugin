@@ -18,7 +18,7 @@ class BoardGame_Loans_Public
 
     public function enqueue_styles()
     {
-        wp_enqueue_style('boardgame-loans-public', plugin_dir_url(dirname(__FILE__)) . 'public/css/boardgame-loans-public.css', array(), '1.0.2');
+        wp_enqueue_style('boardgame-loans-public', plugin_dir_url(dirname(__FILE__)) . 'public/css/boardgame-loans-public.css', array(), '1.0.3');
     }
 
     public function render_bg_loans_waitlist_shortcode($atts)

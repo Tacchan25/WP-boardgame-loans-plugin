@@ -25,10 +25,10 @@ class BoardGame_Loans_Admin
         }
 
         // CSS
-        wp_enqueue_style('boardgame-loans-admin', plugin_dir_url(dirname(__FILE__)) . 'admin/css/boardgame-loans-admin.css', array(), '1.0.2');
+        wp_enqueue_style('boardgame-loans-admin', plugin_dir_url(dirname(__FILE__)) . 'admin/css/boardgame-loans-admin.css', array(), '1.0.3');
 
         // JS: Main Admin (Form logic)
-        wp_enqueue_script('boardgame-loans-admin', plugin_dir_url(dirname(__FILE__)) . 'admin/js/boardgame-loans-admin.js', array(), '1.0.2', true);
+        wp_enqueue_script('boardgame-loans-admin', plugin_dir_url(dirname(__FILE__)) . 'admin/js/boardgame-loans-admin.js', array(), '1.0.3', true);
         
         // Pass translations and ajaxurl
         wp_localize_script('boardgame-loans-admin', 'bgLoansAdmin', array(
@@ -50,7 +50,7 @@ class BoardGame_Loans_Admin
 
         // JS: Settings (Tabs logic)
         if ($hook === 'boardgame-loans_page_boardgame-loans-settings') {
-            wp_enqueue_script('boardgame-loans-settings', plugin_dir_url(dirname(__FILE__)) . 'admin/js/boardgame-loans-settings.js', array(), '1.0.2', true);
+            wp_enqueue_script('boardgame-loans-settings', plugin_dir_url(dirname(__FILE__)) . 'admin/js/boardgame-loans-settings.js', array(), '1.0.3', true);
         }
     }
 
@@ -328,7 +328,7 @@ class BoardGame_Loans_Admin
             'boardgame-loans',
             array($this, 'display_active_loans_page'),
             'dashicons-book',
-            25
+            99
         );
 
         add_submenu_page(
