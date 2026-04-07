@@ -14,7 +14,7 @@ $date_format_setting = get_option('bg_loans_date_format', 'eu');
 $date_format_str = $date_format_setting === 'us' ? 'Y-m-d' : 'd/m/Y';
 
 $allowed_orderby = ['id', 'loan_date', 'due_date', 'return_date', 'status'];
-$orderby = isset($_GET['orderby']) && in_array(strtolower($_GET['orderby']), $allowed_orderby) ? strtolower($_GET['orderby']) : '';
+$orderby = isset($_GET['orderby']) && in_array(strtolower(sanitize_text_field($_GET['orderby'])), $allowed_orderby) ? strtolower(sanitize_text_field($_GET['orderby'])) : '';
 $order = isset($_GET['order']) && strtoupper($_GET['order']) === 'ASC' ? 'ASC' : 'DESC';
 $next_order = $order === 'DESC' ? 'asc' : 'desc';
 $extend_days_setting = intval(get_option('bg_loans_extend_days', 7));
@@ -109,7 +109,7 @@ $base_url = admin_url('admin.php?page=boardgame-loans');
                 <p><strong style="font-size: 16px;">⚠️ <?php esc_html_e('ATTENTION: The returned game is WAITLISTED!', 'boardgame-loans'); ?></strong></p>
                 <p><?php 
                 /* translators: %s: borrower name */
-                printf(esc_html__('This game must be kept safely under the counter. It is reserved for: %s.', 'boardgame-loans'), '<strong>' . esc_html($_GET['borrower']) . '</strong>'); 
+                printf(esc_html__('This game must be kept safely under the counter. It is reserved for: %s.', 'boardgame-loans'), '<strong>' . esc_html(sanitize_text_field($_GET['borrower'])) . '</strong>'); 
                 ?></p>
             </div>
         <?php elseif ($_GET['message'] === 'issued'): ?>

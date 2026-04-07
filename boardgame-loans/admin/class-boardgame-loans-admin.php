@@ -163,7 +163,7 @@ class BoardGame_Loans_Admin
         if (isset($_POST['action']) && $_POST['action'] === 'save_new_loan' && isset($_POST['submit_new_loan'])) {
 
             // Verifica di sicurezza sul Nonce
-            if (!isset($_POST['bg_loans_nonce']) || !wp_verify_nonce($_POST['bg_loans_nonce'], 'save_new_loan_action')) {
+            if (!isset($_POST['bg_loans_nonce']) || !wp_verify_nonce(sanitize_text_field(wp_unslash($_POST['bg_loans_nonce'])), 'save_new_loan_action')) {
                 wp_die(esc_html__('Permission denied.', 'boardgame-loans'));
             }
 
