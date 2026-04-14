@@ -3,7 +3,7 @@ Contributors: Tacchan25
 Tags: boardgame, loans, rental, library, membership, ludotheque
 Requires at least: 5.8
 Tested up to: 6.9
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -49,6 +49,9 @@ When returning a game, the plugin checks if there is someone in the Waitlist for
 3. screenshot-3.png == The Public Shortcode table showing current borrowed games.
 
 == Changelog ==
+
+= 1.0.4 =
+* Security: Fixed unsanitized GET parameter in check_admin_referer logic pointed out by WordPress Plugin Review Team.
 
 = 1.0.3 =
 * Security: Added nonce verification and user capability checks to all data-modifying actions.

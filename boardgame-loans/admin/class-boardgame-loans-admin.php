@@ -25,10 +25,10 @@ class BoardGame_Loans_Admin
         }
 
         // CSS
-        wp_enqueue_style('boardgame-loans-admin', plugin_dir_url(dirname(__FILE__)) . 'admin/css/boardgame-loans-admin.css', array(), '1.0.3');
+        wp_enqueue_style('boardgame-loans-admin', plugin_dir_url(dirname(__FILE__)) . 'admin/css/boardgame-loans-admin.css', array(), '1.0.4');
 
         // JS: Main Admin (Form logic)
-        wp_enqueue_script('boardgame-loans-admin', plugin_dir_url(dirname(__FILE__)) . 'admin/js/boardgame-loans-admin.js', array(), '1.0.3', true);
+        wp_enqueue_script('boardgame-loans-admin', plugin_dir_url(dirname(__FILE__)) . 'admin/js/boardgame-loans-admin.js', array(), '1.0.4', true);
         
         // Pass translations and ajaxurl
         wp_localize_script('boardgame-loans-admin', 'bgLoansAdmin', array(
@@ -50,7 +50,7 @@ class BoardGame_Loans_Admin
 
         // JS: Settings (Tabs logic)
         if ($hook === 'boardgame-loans_page_boardgame-loans-settings') {
-            wp_enqueue_script('boardgame-loans-settings', plugin_dir_url(dirname(__FILE__)) . 'admin/js/boardgame-loans-settings.js', array(), '1.0.3', true);
+            wp_enqueue_script('boardgame-loans-settings', plugin_dir_url(dirname(__FILE__)) . 'admin/js/boardgame-loans-settings.js', array(), '1.0.4', true);
         }
     }
 
@@ -65,7 +65,7 @@ class BoardGame_Loans_Admin
 
         // Azione: Elimina Prestito
         if (isset($_GET['action']) && $_GET['action'] === 'delete_loan' && isset($_GET['loan_id'])) {
-            check_admin_referer('delete_loan_' . $_GET['loan_id']);
+            check_admin_referer('delete_loan_' . intval($_GET['loan_id']));
             $wpdb->delete($table_name, array('id' => intval($_GET['loan_id'])));
             wp_safe_redirect(admin_url('admin.php?page=boardgame-loans&message=deleted'));
             exit;
@@ -73,7 +73,7 @@ class BoardGame_Loans_Admin
 
         // Azione: Chiudi Prestito
         if (isset($_GET['action']) && $_GET['action'] === 'close_loan' && isset($_GET['loan_id'])) {
-            check_admin_referer('close_loan_' . $_GET['loan_id']);
+            check_admin_referer('close_loan_' . intval($_GET['loan_id']));
             $loan_id = intval($_GET['loan_id']);
             
             $closed_loan = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $loan_id));
@@ -112,7 +112,7 @@ class BoardGame_Loans_Admin
 
         // Azione: Estendi Prestito (Proroga)
         if (isset($_GET['action']) && $_GET['action'] === 'extend_loan' && isset($_GET['loan_id'])) {
-            check_admin_referer('extend_loan_' . $_GET['loan_id']);
+            check_admin_referer('extend_loan_' . intval($_GET['loan_id']));
             $loan_id = intval($_GET['loan_id']);
 
             $loan = $wpdb->get_row($wpdb->prepare("SELECT due_date FROM $table_name WHERE id = %d", $loan_id));
@@ -141,7 +141,7 @@ class BoardGame_Loans_Admin
 
         // Azione: Attiva prestito da Waitlist (Issue Loan)
         if (isset($_GET['action']) && $_GET['action'] === 'issue_loan' && isset($_GET['loan_id'])) {
-            check_admin_referer('issue_loan_' . $_GET['loan_id']);
+            check_admin_referer('issue_loan_' . intval($_GET['loan_id']));
             $loan_id = intval($_GET['loan_id']);
 
             $loan_duration = intval(get_option('bg_loans_default_duration', 7));
