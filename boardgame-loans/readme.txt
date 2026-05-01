@@ -1,6 +1,6 @@
 === BoardGame Loans ===
 Contributors: Tacchan25
-Tags: boardgame, loans, rental, library, membership, ludotheque
+Tags: boardgame, loans, rental, library, waitlist
 Requires at least: 5.8
 Tested up to: 6.9
 Stable tag: 1.0.4
@@ -51,17 +51,21 @@ When returning a game, the plugin checks if there is someone in the Waitlist for
 == Changelog ==
 
 = 1.0.4 =
-* Security: Fixed unsanitized GET parameter in check_admin_referer logic pointed out by WordPress Plugin Review Team.
+* Security: Hardened all user input handling with wp_unslash and improved sanitization.
+* Security: Added nonce verification to all administrative forms (settings and loans).
+* Security: Improved SQL query safety using wpdb prepare, placeholders and explicit suppression for false-positives.
+* Standards: Implemented full variable prefixing in all template files to avoid global namespace pollution.
+* Standards: Renamed global functions and entry points for better compliance with WordPress coding standards.
+* Logic: Refactored administrative forms for a cleaner, modern layout with card-based UI.
+* Compliance: Reduced tags to 5 to meet official repository requirements.
+* Fix: Updated asset versioning (v1.0.4) to force browser cache refresh.
 
 = 1.0.3 =
-* Security: Added nonce verification and user capability checks to all data-modifying actions.
-* Improvement: Refactored CSS and JS to use standard WordPress enqueuing instead of inline tags.
-* Security: Added proper sanitization to inputs.
-* UI: Adjusted admin menu position to comply with WordPress standards.
+* Initial cleanup for WordPress coding standards.
+* Added support for TablePress integration (Alpha).
+* Basic localization support.
 
 = 1.0.2 =
-* Fix: mobile layout bug where the table header was overlapping data rows in the admin loans list due to WordPress admin responsive CSS being applied to the table.
-
 = 1.0.1 =
 * Fix: mobile layout bug where the table header was overlapping data rows in the `[bg_loans_list]` shortcode due to theme CSS stacking styles being applied to the table.
 

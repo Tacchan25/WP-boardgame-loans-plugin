@@ -34,3 +34,78 @@
     display: none !important;
     content: none !important;
 }
+
+/* Loan Form Styles */
+#bg-loans-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 15px;
+}
+
+.bg-loans-card {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    padding: 20px;
+    box-shadow: 0 1px 1px rgba(0,0,0,0.04);
+}
+
+.bg-loans-card h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bg-loans-card .form-field {
+    margin-bottom: 15px;
+}
+
+.bg-loans-card .form-field label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #2c3338;
+}
+
+.bg-loans-card .form-field .required {
+    color: #d63638;
+}
+
+.bg-loans-card .form-field input[type="text"],
+.bg-loans-card .form-field input[type="number"],
+.bg-loans-card .form-field input[type="date"],
+.bg-loans-card .form-field select,
+.bg-loans-card .form-field textarea {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.bg-loans-card .form-field-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+@media (max-width: 480px) {
+    .bg-loans-card .form-field-row {
+         grid-template-columns: 1fr;
+    }
+}
+
+.bg-loans-submit-wrap {
+    margin-top: 20px;
+    padding: 15px 20px;
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}

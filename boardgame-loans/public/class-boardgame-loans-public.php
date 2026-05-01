@@ -38,10 +38,10 @@ class BoardGame_Loans_Public
     public function render_bg_loans_list_shortcode($atts)
     {
         global $wpdb;
-        $table_name = $wpdb->prefix . 'bg_loans';
+        $bg_loans_table_name = $wpdb->prefix . 'bg_loans';
 
         // Default attributes
-        $a = shortcode_atts(array(
+        $bg_loans_atts = shortcode_atts(array(
             'status_filter'    => 'open',   // Values: 'open', 'closed', 'all'
             'show_loan_date'   => 'true',
             'show_due_date'    => 'true',
@@ -51,114 +51,121 @@ class BoardGame_Loans_Public
             'css_class'        => '',
         ), $atts, 'bg_loans_list');
 
-        $date_format_setting = get_option('bg_loans_date_format', 'eu');
-        $date_format_str = $date_format_setting === 'us' ? 'Y-m-d' : 'd/m/Y';
+        $bg_loans_date_setting = get_option('bg_loans_date_format', 'eu');
+        $bg_loans_date_format_str = $bg_loans_date_setting === 'us' ? 'Y-m-d' : 'd/m/Y';
 
         // Build Query
-        $where = "";
-        if ($a['status_filter'] === 'open') {
-            $where = "WHERE status = 'open'";
-        } elseif ($a['status_filter'] === 'closed') {
-            $where = "WHERE status = 'closed'";
-        } elseif ($a['status_filter'] === 'queue' || $a['status_filter'] === 'waitlist') {
-            $where = "WHERE status IN ('waitlist', 'available')";
+        $bg_loans_where = "";
+        if ($bg_loans_atts['status_filter'] === 'open') {
+            $bg_loans_where = "WHERE status = 'open'";
+        } elseif ($bg_loans_atts['status_filter'] === 'closed') {
+            $bg_loans_where = "WHERE status = 'closed'";
+        } elseif ($bg_loans_atts['status_filter'] === 'queue' || $bg_loans_atts['status_filter'] === 'waitlist') {
+            $bg_loans_where = "WHERE status IN ('waitlist', 'available')";
         }
 
         // Newest loans first by default
-        $loans = $wpdb->get_results("SELECT * FROM $table_name $where ORDER BY loan_date DESC");
+        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+        $bg_loans_items = $wpdb->get_results("SELECT * FROM {$bg_loans_table_name} {$bg_loans_where} ORDER BY loan_date DESC");
         
-        $enable_copy_number = get_option('bg_loans_enable_copy_number', 'false');
+        $bg_loans_enable_copy_pref = get_option('bg_loans_enable_copy_number', 'false');
 
-        if (!$loans) {
+        if (!$bg_loans_items) {
             return '<p class="bg-loans-public-empty" style="text-align: center; margin: 20px 0; font-style: italic;">' . esc_html__('No loans to show at the moment.', 'boardgame-loans') . '</p>';
         }
 
-        $extra_class = !empty($a['css_class']) ? ' ' . esc_attr($a['css_class']) : '';
+        $bg_loans_extra_css = !empty($bg_loans_atts['css_class']) ? ' ' . esc_attr($bg_loans_atts['css_class']) : '';
 
         // Responsive container for mobile screens
-        $html = '<div class="bg-loans-table-responsive">';
+        $bg_loans_html = '<div class="bg-loans-table-responsive">';
         
         // Output table
-        $html .= '<table class="bg-loans-public-table' . $extra_class . '" style="width: 100%; text-align: left; border-collapse: collapse; min-width: 600px;">';
-        $html .= '<thead><tr>';
+        $bg_loans_html .= '<table class="bg-loans-public-table' . $bg_loans_extra_css . '" style="width: 100%; text-align: left; border-collapse: collapse; min-width: 600px;">';
+        $bg_loans_html .= '<thead><tr>';
         
-        $html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Game', 'boardgame-loans') . '</th>';
+        $bg_loans_html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Game', 'boardgame-loans') . '</th>';
         
-        if (filter_var($a['show_borrower'], FILTER_VALIDATE_BOOLEAN)) {
-            $html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Borrower', 'boardgame-loans') . '</th>';
+        if (filter_var($bg_loans_atts['show_borrower'], FILTER_VALIDATE_BOOLEAN)) {
+            $bg_loans_html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Borrower', 'boardgame-loans') . '</th>';
         }
-        if (filter_var($a['show_loan_date'], FILTER_VALIDATE_BOOLEAN)) {
-            $html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Loan Date', 'boardgame-loans') . '</th>';
+        if (filter_var($bg_loans_atts['show_loan_date'], FILTER_VALIDATE_BOOLEAN)) {
+            $bg_loans_html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Loan Date', 'boardgame-loans') . '</th>';
         }
-        if (filter_var($a['show_due_date'], FILTER_VALIDATE_BOOLEAN)) {
-            $html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Estimated Due Date', 'boardgame-loans') . '</th>';
+        if (filter_var($bg_loans_atts['show_due_date'], FILTER_VALIDATE_BOOLEAN)) {
+            $bg_loans_html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Estimated Due Date', 'boardgame-loans') . '</th>';
         }
-        if (filter_var($a['show_return_date'], FILTER_VALIDATE_BOOLEAN)) {
-            $html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Return Date', 'boardgame-loans') . '</th>';
+        if (filter_var($bg_loans_atts['show_return_date'], FILTER_VALIDATE_BOOLEAN)) {
+            $bg_loans_html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Return Date', 'boardgame-loans') . '</th>';
         }
-        if (filter_var($a['show_status'], FILTER_VALIDATE_BOOLEAN)) {
-            $html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Status', 'boardgame-loans') . '</th>';
+        if (filter_var($bg_loans_atts['show_status'], FILTER_VALIDATE_BOOLEAN)) {
+            $bg_loans_html .= '<th style="border-bottom: 2px solid #ccc; padding: 8px;">' . esc_html__('Status', 'boardgame-loans') . '</th>';
         }
         
-        $html .= '</tr></thead><tbody>';
+        $bg_loans_html .= '</tr></thead><tbody>';
 
-        foreach ($loans as $loan) {
-            $html .= '<tr>';
-            $title_html = esc_html($loan->game_title);
-            if ($enable_copy_number === 'true' && isset($loan->copy_number) && $loan->copy_number > 1) {
+        foreach ($bg_loans_items as $bg_loans_item) {
+            $bg_loans_html .= '<tr>';
+            $bg_loans_title_label = esc_html($bg_loans_item->game_title);
+            if ($bg_loans_enable_copy_pref === 'true' && isset($bg_loans_item->copy_number) && $bg_loans_item->copy_number > 1) {
                 /* translators: %d: copy number */
-                $title_html .= ' (' . esc_html(sprintf(__('Copy n. %d', 'boardgame-loans'), $loan->copy_number)) . ')';
+                $bg_loans_title_label .= ' (' . esc_html(sprintf(__('Copy n. %d', 'boardgame-loans'), $bg_loans_item->copy_number)) . ')';
             }
-            $html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;"><strong>' . $title_html . '</strong></td>';
+            $bg_loans_html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;"><strong>' . $bg_loans_title_label . '</strong></td>';
 
-            if (filter_var($a['show_borrower'], FILTER_VALIDATE_BOOLEAN)) {
-                $borrower = '';
-                if ($loan->borrower_type === 'user' && $loan->borrower_user_id) {
-                    $user_info = get_userdata($loan->borrower_user_id);
-                    $borrower = $user_info ? $user_info->display_name : 'User ID: ' . $loan->borrower_user_id;
+            if (filter_var($bg_loans_atts['show_borrower'], FILTER_VALIDATE_BOOLEAN)) {
+                $bg_loans_borrower_label = '';
+                if ($bg_loans_item->borrower_type === 'user' && $bg_loans_item->borrower_user_id) {
+                    $bg_loans_user_info = get_userdata($bg_loans_item->borrower_user_id);
+                    $bg_loans_borrower_label = $bg_loans_user_info ? $bg_loans_user_info->display_name : 'User ID: ' . $bg_loans_item->borrower_user_id;
                 } else {
-                    $borrower = $loan->borrower_name;
+                    $bg_loans_borrower_label = $bg_loans_item->borrower_name;
                 }
-                $html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;">' . esc_html($borrower) . '</td>';
+                $bg_loans_html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;">' . esc_html($bg_loans_borrower_label) . '</td>';
             }
 
-            if (filter_var($a['show_loan_date'], FILTER_VALIDATE_BOOLEAN)) {
-                $loan_str = ($loan->status === 'waitlist') ? '-' : date_i18n($date_format_str, strtotime($loan->loan_date));
-                $html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;">' . esc_html($loan_str) . '</td>';
+            if (filter_var($bg_loans_atts['show_loan_date'], FILTER_VALIDATE_BOOLEAN)) {
+                $bg_loans_loan_date_str = ($bg_loans_item->status === 'waitlist') ? '-' : date_i18n($bg_loans_date_format_str, strtotime($bg_loans_item->loan_date));
+                $bg_loans_html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;">' . esc_html($bg_loans_loan_date_str) . '</td>';
             }
 
-            if (filter_var($a['show_due_date'], FILTER_VALIDATE_BOOLEAN)) {
-                $due_formatted = ($loan->status === 'waitlist' || empty($loan->due_date)) ? '-' : date_i18n($date_format_str, strtotime($loan->due_date));
+            if (filter_var($bg_loans_atts['show_due_date'], FILTER_VALIDATE_BOOLEAN)) {
+                $bg_loans_due_date_str = ($bg_loans_item->status === 'waitlist' || empty($bg_loans_item->due_date)) ? '-' : date_i18n($bg_loans_date_format_str, strtotime($bg_loans_item->due_date));
                 
                 // Visual alert if overdue and still open
-                $is_overdue = ($loan->status === 'open' && $loan->due_date && strtotime(gmdate('Y-m-d', strtotime($loan->due_date)) . ' 23:59:59') < time());
-                if ($is_overdue) {
-                    $html .= '<td style="border-bottom: 1px solid #eee; padding: 8px; color: #d63638; font-weight: bold;">' . esc_html($due_formatted) . '</td>';
+                $bg_loans_is_overdue_now = ($bg_loans_item->status === 'open' && $bg_loans_item->due_date && strtotime(gmdate('Y-m-d', strtotime($bg_loans_item->due_date)) . ' 23:59:59') < time());
+                if ($bg_loans_is_overdue_now) {
+                    $bg_loans_html .= '<td style="border-bottom: 1px solid #eee; padding: 8px; color: #d63638; font-weight: bold;">' . esc_html($bg_loans_due_date_str) . '</td>';
                 } else {
-                    $html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;">' . esc_html($due_formatted) . '</td>';
+                    $bg_loans_html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;">' . esc_html($bg_loans_due_date_str) . '</td>';
                 }
             }
 
-            if (filter_var($a['show_return_date'], FILTER_VALIDATE_BOOLEAN)) {
-                $return_formatted = $loan->return_date ? date_i18n($date_format_str, strtotime($loan->return_date)) : '-';
-                $html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;">' . esc_html($return_formatted) . '</td>';
+            if (filter_var($bg_loans_atts['show_return_date'], FILTER_VALIDATE_BOOLEAN)) {
+                $bg_loans_return_date_label = $bg_loans_item->return_date ? date_i18n($bg_loans_date_format_str, strtotime($bg_loans_item->return_date)) : '-';
+                $bg_loans_html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;">' . esc_html($bg_loans_return_date_label) . '</td>';
             }
 
-            if (filter_var($a['show_status'], FILTER_VALIDATE_BOOLEAN)) {
-                if ($loan->status === 'open') $status_label = __('In progress', 'boardgame-loans');
-                elseif ($loan->status === 'closed') $status_label = __('Returned', 'boardgame-loans');
-                elseif ($loan->status === 'waitlist') $status_label = __('Waitlisted', 'boardgame-loans');
-                elseif ($loan->status === 'available') $status_label = __('Available for Pickup', 'boardgame-loans');
-                else $status_label = $loan->status;
-                $html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;">' . esc_html($status_label) . '</td>';
+            if (filter_var($bg_loans_atts['show_status'], FILTER_VALIDATE_BOOLEAN)) {
+                if ($bg_loans_item->status === 'open') {
+                    $bg_loans_status_txt = __('In progress', 'boardgame-loans');
+                } elseif ($bg_loans_item->status === 'closed') {
+                    $bg_loans_status_txt = __('Returned', 'boardgame-loans');
+                } elseif ($bg_loans_item->status === 'waitlist') {
+                    $bg_loans_status_txt = __('Waitlisted', 'boardgame-loans');
+                } elseif ($bg_loans_item->status === 'available') {
+                    $bg_loans_status_txt = __('Available for Pickup', 'boardgame-loans');
+                } else {
+                    $bg_loans_status_txt = $bg_loans_item->status;
+                }
+                $bg_loans_html .= '<td style="border-bottom: 1px solid #eee; padding: 8px;">' . esc_html($bg_loans_status_txt) . '</td>';
             }
 
-            $html .= '</tr>';
+            $bg_loans_html .= '</tr>';
         }
 
-        $html .= '</tbody></table>';
-        $html .= '</div>';
+        $bg_loans_html .= '</tbody></table>';
+        $bg_loans_html .= '</div>';
 
-        return $html;
+        return $bg_loans_html;
     }
 }

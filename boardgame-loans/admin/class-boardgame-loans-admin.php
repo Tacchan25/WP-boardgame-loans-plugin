@@ -49,7 +49,8 @@ class BoardGame_Loans_Admin
         ));
 
         // JS: Settings (Tabs logic)
-        if ($hook === 'boardgame-loans_page_boardgame-loans-settings') {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+        if (isset($_GET['page']) && sanitize_text_field(wp_unslash($_GET['page'])) === 'boardgame-loans-settings') {
             wp_enqueue_script('boardgame-loans-settings', plugin_dir_url(dirname(__FILE__)) . 'admin/js/boardgame-loans-settings.js', array(), '1.0.4', true);
         }
     }
@@ -65,23 +66,27 @@ class BoardGame_Loans_Admin
 
         // Azione: Elimina Prestito
         if (isset($_GET['action']) && $_GET['action'] === 'delete_loan' && isset($_GET['loan_id'])) {
-            check_admin_referer('delete_loan_' . intval($_GET['loan_id']));
-            $wpdb->delete($table_name, array('id' => intval($_GET['loan_id'])));
+            $get_loan_id = intval(wp_unslash($_GET['loan_id']));
+            check_admin_referer('delete_loan_' . $get_loan_id);
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
+            $wpdb->delete($table_name, array('id' => $get_loan_id));
             wp_safe_redirect(admin_url('admin.php?page=boardgame-loans&message=deleted'));
             exit;
         }
 
         // Azione: Chiudi Prestito
         if (isset($_GET['action']) && $_GET['action'] === 'close_loan' && isset($_GET['loan_id'])) {
-            check_admin_referer('close_loan_' . intval($_GET['loan_id']));
-            $loan_id = intval($_GET['loan_id']);
+            $get_loan_id = intval(wp_unslash($_GET['loan_id']));
+            check_admin_referer('close_loan_' . $get_loan_id);
             
-            $closed_loan = $wpdb->get_row($wpdb->prepare("SELECT * FROM $table_name WHERE id = %d", $loan_id));
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+            $closed_loan = $wpdb->get_row($wpdb->prepare("SELECT * FROM {$table_name} WHERE id = %d", $get_loan_id));
 
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $wpdb->update(
                 $table_name,
                 array('status' => 'closed', 'return_date' => gmdate('Y-m-d H:i:s')),
-                array('id' => $loan_id),
+                array('id' => $get_loan_id),
                 array('%s', '%s'),
                 array('%d')
             );
@@ -92,13 +97,16 @@ class BoardGame_Loans_Admin
                 if ($enable_waitlist === 'true') {
                     $waitlist_unique = get_option('bg_loans_waitlist_unique', 'title_copy');
                     if ($waitlist_unique === 'internal_code' && !empty($closed_loan->internal_code)) {
-                        $waitlisted = $wpdb->get_row($wpdb->prepare("SELECT id, borrower_name FROM $table_name WHERE status = 'waitlist' AND internal_code = %s ORDER BY loan_date ASC LIMIT 1", $closed_loan->internal_code));
+                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+                        $waitlisted = $wpdb->get_row($wpdb->prepare("SELECT id, borrower_name FROM {$table_name} WHERE status = 'waitlist' AND internal_code = %s ORDER BY loan_date ASC LIMIT 1", $closed_loan->internal_code));
                     } else {
-                        $waitlisted = $wpdb->get_row($wpdb->prepare("SELECT id, borrower_name FROM $table_name WHERE status = 'waitlist' AND game_title = %s AND copy_number = %d ORDER BY loan_date ASC LIMIT 1", $closed_loan->game_title, $closed_loan->copy_number));
+                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+                        $waitlisted = $wpdb->get_row($wpdb->prepare("SELECT id, borrower_name FROM {$table_name} WHERE status = 'waitlist' AND game_title = %s AND copy_number = %d ORDER BY loan_date ASC LIMIT 1", $closed_loan->game_title, $closed_loan->copy_number));
                     }
 
                     if ($waitlisted) {
                         $expire_date = gmdate('Y-m-d H:i:s', strtotime("+3 days"));
+                        // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
                         $wpdb->update($table_name, array('status' => 'available', 'due_date' => $expire_date), array('id' => $waitlisted->id));
                         wp_safe_redirect(admin_url('admin.php?page=boardgame-loans&message=waitlist_triggered&borrower=' . urlencode($waitlisted->borrower_name)));
                         exit;
@@ -112,10 +120,11 @@ class BoardGame_Loans_Admin
 
         // Azione: Estendi Prestito (Proroga)
         if (isset($_GET['action']) && $_GET['action'] === 'extend_loan' && isset($_GET['loan_id'])) {
-            check_admin_referer('extend_loan_' . intval($_GET['loan_id']));
-            $loan_id = intval($_GET['loan_id']);
+            $get_loan_id = intval(wp_unslash($_GET['loan_id']));
+            check_admin_referer('extend_loan_' . $get_loan_id);
 
-            $loan = $wpdb->get_row($wpdb->prepare("SELECT due_date FROM $table_name WHERE id = %d", $loan_id));
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+            $loan = $wpdb->get_row($wpdb->prepare("SELECT due_date FROM {$table_name} WHERE id = %d", $get_loan_id));
             if ($loan) {
                 $base_timestamp = !empty($loan->due_date) ? strtotime($loan->due_date) : time();
                 // If it's already overdue, the extension starts from today to avoid useless extensions in the past
@@ -126,10 +135,11 @@ class BoardGame_Loans_Admin
                 $extend_days_setting = intval(get_option('bg_loans_extend_days', 7));
                 $new_due_date = gmdate('Y-m-d', strtotime("+$extend_days_setting days", $base_timestamp));
                 
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
                 $wpdb->update(
                     $table_name,
                     array('due_date' => $new_due_date),
-                    array('id' => $loan_id),
+                    array('id' => $get_loan_id),
                     array('%s'),
                     array('%d')
                 );
@@ -141,16 +151,17 @@ class BoardGame_Loans_Admin
 
         // Azione: Attiva prestito da Waitlist (Issue Loan)
         if (isset($_GET['action']) && $_GET['action'] === 'issue_loan' && isset($_GET['loan_id'])) {
-            check_admin_referer('issue_loan_' . intval($_GET['loan_id']));
-            $loan_id = intval($_GET['loan_id']);
+            $get_loan_id = intval(wp_unslash($_GET['loan_id']));
+            check_admin_referer('issue_loan_' . $get_loan_id);
 
             $loan_duration = intval(get_option('bg_loans_default_duration', 7));
             $new_due_date = gmdate('Y-m-d H:i:s', strtotime("+$loan_duration days"));
 
+            // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
             $wpdb->update(
                 $table_name,
                 array('status' => 'open', 'loan_date' => current_time('mysql'), 'due_date' => $new_due_date),
-                array('id' => $loan_id),
+                array('id' => $get_loan_id),
                 array('%s', '%s', '%s'),
                 array('%d')
             );
@@ -169,18 +180,18 @@ class BoardGame_Loans_Admin
 
             // Preparazione dei dati puliti
             $data = array(
-                'game_source' => isset($_POST['game_source']) ? sanitize_text_field($_POST['game_source']) : 'manual',
-                'game_ref' => isset($_POST['game_ref']) ? sanitize_text_field($_POST['game_ref']) : '',
-                'game_title' => sanitize_text_field($_POST['game_title']),
-                'internal_code' => isset($_POST['internal_code']) ? sanitize_text_field($_POST['internal_code']) : '',
-                'copy_number' => isset($_POST['copy_number']) ? intval($_POST['copy_number']) : 1,
-                'status' => isset($_POST['status']) ? sanitize_text_field($_POST['status']) : 'open',
-                'borrower_type' => isset($_POST['borrower_type']) ? sanitize_text_field($_POST['borrower_type']) : 'manual',
-                'borrower_user_id' => !empty($_POST['borrower_user_id']) ? intval($_POST['borrower_user_id']) : null,
-                'borrower_name' => sanitize_text_field($_POST['borrower_name']),
-                'loan_date' => sanitize_text_field($_POST['loan_date']),
-                'due_date' => !empty($_POST['due_date']) ? sanitize_text_field($_POST['due_date']) : null,
-                'notes' => sanitize_textarea_field($_POST['notes']),
+                'game_source' => isset($_POST['game_source']) ? sanitize_text_field(wp_unslash($_POST['game_source'])) : 'manual',
+                'game_ref' => isset($_POST['game_ref']) ? sanitize_text_field(wp_unslash($_POST['game_ref'])) : '',
+                'game_title' => isset($_POST['game_title']) ? sanitize_text_field(wp_unslash($_POST['game_title'])) : '',
+                'internal_code' => isset($_POST['internal_code']) ? sanitize_text_field(wp_unslash($_POST['internal_code'])) : '',
+                'copy_number' => isset($_POST['copy_number']) ? intval(wp_unslash($_POST['copy_number'])) : 1,
+                'status' => isset($_POST['status']) ? sanitize_text_field(wp_unslash($_POST['status'])) : 'open',
+                'borrower_type' => isset($_POST['borrower_type']) ? sanitize_text_field(wp_unslash($_POST['borrower_type'])) : 'manual',
+                'borrower_user_id' => !empty($_POST['borrower_user_id']) ? intval(wp_unslash($_POST['borrower_user_id'])) : null,
+                'borrower_name' => isset($_POST['borrower_name']) ? sanitize_text_field(wp_unslash($_POST['borrower_name'])) : '',
+                'loan_date' => isset($_POST['loan_date']) ? sanitize_text_field(wp_unslash($_POST['loan_date'])) : '',
+                'due_date' => !empty($_POST['due_date']) ? sanitize_text_field(wp_unslash($_POST['due_date'])) : null,
+                'notes' => isset($_POST['notes']) ? sanitize_textarea_field(wp_unslash($_POST['notes'])) : '',
             );
 
             // Controllo base dei campi obbligatori
@@ -194,9 +205,11 @@ class BoardGame_Loans_Admin
                 $is_mod = !empty($_POST['loan_id']) ? intval($_POST['loan_id']) : 0;
                 
                 if ($waitlist_unique === 'internal_code' && !empty($data['internal_code'])) {
-                    $conflict = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table_name WHERE status = 'open' AND internal_code = %s AND id != %d", $data['internal_code'], $is_mod));
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+                    $conflict = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$table_name} WHERE status = 'open' AND internal_code = %s AND id != %d", $data['internal_code'], $is_mod));
                 } else {
-                    $conflict = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table_name WHERE status = 'open' AND game_title = %s AND copy_number = %d AND id != %d", $data['game_title'], $data['copy_number'], $is_mod));
+                    // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter
+                    $conflict = $wpdb->get_var($wpdb->prepare("SELECT id FROM {$table_name} WHERE status = 'open' AND game_title = %s AND copy_number = %d AND id != %d", $data['game_title'], $data['copy_number'], $is_mod));
                 }
                 
                 if ($conflict) {
@@ -206,12 +219,14 @@ class BoardGame_Loans_Admin
 
             if (!empty($_POST['loan_id'])) {
                 // Modifica
-                $loan_id = intval($_POST['loan_id']);
+                $loan_id = intval(wp_unslash($_POST['loan_id']));
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching
                 $wpdb->update($table_name, $data, array('id' => $loan_id));
                 $msg = 'updated';
             }
             else {
                 // Inserimento
+                // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery
                 $wpdb->insert($table_name, $data);
                 $loan_id = $wpdb->insert_id;
                 $msg = 'success';
@@ -237,7 +252,7 @@ class BoardGame_Loans_Admin
             wp_send_json_error(__('Permission denied.', 'boardgame-loans'));
         }
 
-        $query = isset($_POST['q']) ? sanitize_text_field($_POST['q']) : '';
+        $query = isset($_POST['q']) ? sanitize_text_field(wp_unslash($_POST['q'])) : '';
         if (empty($query)) {
             wp_send_json_error(__('Empty query', 'boardgame-loans'));
         }

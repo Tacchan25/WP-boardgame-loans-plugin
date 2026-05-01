@@ -64,6 +64,7 @@ class BoardGame_Loans
 
     public function load_textdomain()
     {
+        // phpcs:ignore PluginCheck.CodeAnalysis.DiscouragedFunctions.load_plugin_textdomainFound
         load_plugin_textdomain('boardgame-loans', false, dirname(plugin_basename(__FILE__)) . '/languages');
     }
 
@@ -104,9 +105,12 @@ class BoardGame_Loans
     }
 }
 
-function run_boardgame_loans()
+/**
+ * Begins execution of the plugin.
+ */
+function boardgame_loans_run_init()
 {
     BoardGame_Loans::get_instance();
 }
 
-run_boardgame_loans();
+boardgame_loans_run_init();
