@@ -6,26 +6,42 @@ if (!defined('ABSPATH')) {
 }
 
 global $wpdb;
-$bg_loans_table_name = $wpdb->prefix . 'bg_loans';
+$bg_loans_table_name = esc_sql($wpdb->prefix . 'bg_loans');
 
 $bg_loans_date_format_setting = get_option('bg_loans_date_format', 'eu');
 $bg_loans_date_format_str = $bg_loans_date_format_setting === 'us' ? 'Y-m-d' : 'd/m/Y';
 
+// Validate default ordering settings with allowlist
 $bg_loans_allowed_orderby = ['id', 'loan_date', 'due_date', 'return_date', 'status'];
 
-// Validate default ordering settings with allowlist
 $bg_loans_default_orderby_raw = get_option('bg_loans_default_orderby', 'status');
-$bg_loans_default_orderby_setting = in_array(strtolower(sanitize_text_field(wp_unslash($bg_loans_default_orderby_raw))), $bg_loans_allowed_orderby, true) ? strtolower(sanitize_text_field(wp_unslash($bg_loans_default_orderby_raw))) : 'status';
+$bg_loans_default_orderby_setting = 'status';
+if ($bg_loans_default_orderby_raw === 'id') $bg_loans_default_orderby_setting = 'id';
+elseif ($bg_loans_default_orderby_raw === 'loan_date') $bg_loans_default_orderby_setting = 'loan_date';
+elseif ($bg_loans_default_orderby_raw === 'due_date') $bg_loans_default_orderby_setting = 'due_date';
+elseif ($bg_loans_default_orderby_raw === 'return_date') $bg_loans_default_orderby_setting = 'return_date';
 
 $bg_loans_default_order_raw = get_option('bg_loans_default_order', 'DESC');
 $bg_loans_default_order_setting = strtoupper(sanitize_text_field(wp_unslash($bg_loans_default_order_raw))) === 'ASC' ? 'ASC' : 'DESC';
 
 // phpcs:disable WordPress.Security.NonceVerification.Recommended
-$bg_loans_orderby    = isset($_GET['orderby']) && in_array(strtolower(sanitize_text_field(wp_unslash($_GET['orderby']))), $bg_loans_allowed_orderby, true) ? strtolower(sanitize_text_field(wp_unslash($_GET['orderby']))) : '';
-$bg_loans_order      = isset($_GET['order']) && strtoupper(sanitize_text_field(wp_unslash($_GET['order']))) === 'ASC' ? 'ASC' : 'DESC';
+$bg_loans_raw_orderby = isset($_GET['orderby']) ? sanitize_text_field(wp_unslash($_GET['orderby'])) : '';
+$bg_loans_orderby = '';
+if ($bg_loans_raw_orderby === 'id') $bg_loans_orderby = 'id';
+elseif ($bg_loans_raw_orderby === 'loan_date') $bg_loans_orderby = 'loan_date';
+elseif ($bg_loans_raw_orderby === 'due_date') $bg_loans_orderby = 'due_date';
+elseif ($bg_loans_raw_orderby === 'return_date') $bg_loans_orderby = 'return_date';
+elseif ($bg_loans_raw_orderby === 'status') $bg_loans_orderby = 'status';
+
+$bg_loans_raw_order  = isset($_GET['order']) ? sanitize_text_field(wp_unslash($_GET['order'])) : '';
+$bg_loans_order      = strtoupper($bg_loans_raw_order) === 'ASC' ? 'ASC' : 'DESC';
+
 $bg_loans_search_game = isset($_REQUEST['search_game']) ? sanitize_text_field(wp_unslash($_REQUEST['search_game'])) : '';
 $bg_loans_search_user = isset($_REQUEST['search_user']) ? sanitize_text_field(wp_unslash($_REQUEST['search_user'])) : '';
-$bg_loans_filter_status = isset($_REQUEST['filter_status']) ? sanitize_text_field(wp_unslash($_REQUEST['filter_status'])) : '';
+
+$bg_loans_raw_filter_status = isset($_REQUEST['filter_status']) ? sanitize_text_field(wp_unslash($_REQUEST['filter_status'])) : '';
+$bg_loans_filter_status = esc_sql($bg_loans_raw_filter_status);
+
 $bg_loans_message       = isset($_GET['message']) ? sanitize_text_field(wp_unslash($_GET['message'])) : '';
 $bg_loans_borrower      = isset($_GET['borrower']) ? sanitize_text_field(wp_unslash($_GET['borrower'])) : '';
 // phpcs:enable WordPress.Security.NonceVerification.Recommended
@@ -43,12 +59,12 @@ if ($bg_loans_orderby) {
 } else {
     // Default sort based on settings
     if ($bg_loans_default_orderby_setting === 'status') {
-    // Status ordering uses a fixed FIELD order, then applies the validated default direction
-    $bg_loans_order_clause = "ORDER BY FIELD(status, 'open', 'closed'), loan_date {$bg_loans_default_order_setting}, id {$bg_loans_default_order_setting}";
-} else {
-    // Safe ORDER BY using validated column and direction
-    $bg_loans_order_clause = "ORDER BY {$bg_loans_default_orderby_setting} {$bg_loans_default_order_setting}";
-}
+        // Status ordering uses a fixed FIELD order, then applies the validated default direction
+        $bg_loans_order_clause = "ORDER BY FIELD(status, 'open', 'closed'), loan_date {$bg_loans_default_order_setting}, id {$bg_loans_default_order_setting}";
+    } else {
+        // Safe ORDER BY using validated column and direction
+        $bg_loans_order_clause = "ORDER BY {$bg_loans_default_orderby_setting} {$bg_loans_default_order_setting}";
+    }
 }
 
 $bg_loans_where_clauses = array();
@@ -85,12 +101,10 @@ $bg_loans_where_sql = "";
 if (!empty($bg_loans_where_clauses)) {
     $bg_loans_where_sql = "WHERE " . implode(' AND ', $bg_loans_where_clauses);
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter, WordPress.DB.PreparedSQLPlaceholders.UnfinishedPrepare -- Query structure and ORDER BY clause are safe. ORDER BY uses validated column/direction.
-    $bg_loans_query = $wpdb->prepare("SELECT * FROM {$bg_loans_table_name} {$bg_loans_where_sql} {$bg_loans_order_clause}", $bg_loans_where_values);
-    $bg_loans_items = $wpdb->get_results($bg_loans_query);
+    $bg_loans_items = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$bg_loans_table_name} {$bg_loans_where_sql} {$bg_loans_order_clause}", $bg_loans_where_values));
 } else {
     // phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- ORDER BY clause built from validated settings. Using prepare for compliance.
-    $bg_loans_query = $wpdb->prepare("SELECT * FROM {$bg_loans_table_name} {$bg_loans_order_clause}", array());
-    $bg_loans_items = $wpdb->get_results($bg_loans_query);
+    $bg_loans_items = $wpdb->get_results($wpdb->prepare("SELECT * FROM {$bg_loans_table_name} {$bg_loans_order_clause}", array()));
 }
 
 $bg_loans_base_url = admin_url('admin.php?page=boardgame-loans');
